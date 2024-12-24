@@ -111,7 +111,7 @@ class PublicController extends AbstractController
         $code = $request->getSession()->get('recharge_card') ?? null;
 
         if ($code != null) {
-            $card = $this->cardRepository->findOneBy(['code' => $code]);
+            $card = $this->cardRepository->findOneByCodeOrCardHolderOrUid(['code' => $code]);
         }
 
         if ($request->getMethod() === Request::METHOD_POST) {
