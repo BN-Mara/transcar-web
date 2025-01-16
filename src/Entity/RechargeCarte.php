@@ -25,7 +25,7 @@ class RechargeCarte
     #[ORM\Column(length: 64)]
     private ?string $createdBy = null;
 
-    #[ORM\ManyToOne(inversedBy: 'rechargeCartes')]
+    #[ORM\ManyToOne(fetch: 'EAGER',inversedBy: 'rechargeCartes')]
     private ?NfcCard $card = null;
 
     #[ORM\Column(nullable: true)]
@@ -34,7 +34,7 @@ class RechargeCarte
     #[ORM\Column(nullable: true)]
     private ?float $newBalance = null;
 
-    #[ORM\Column(length: 10)]
+    #[ORM\Column(length: 20)]
     private ?string $rechargeType = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
@@ -52,7 +52,7 @@ class RechargeCarte
     #[ORM\Column(nullable: true)]
     private ?int $subscriptionId = null;
 
-    #[ORM\Column(length: 10)]
+    #[ORM\Column(length: 200)]
     private ?string $reference = null;
 
     public function __construct()

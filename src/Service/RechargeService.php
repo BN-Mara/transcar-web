@@ -4,15 +4,10 @@ namespace App\Service;
 
 use App\Entity\NfcCard;
 use App\Entity\Payment;
-use App\Entity\RechargeCarte;
-use App\Entity\SubscriptionPlan;
-use App\Entity\User;
-use App\Helper\StringGenerator;
 use App\Repository\CurrencyRepository;
 use App\Repository\NfcCardRepository;
 use App\Repository\PaymentRepository;
 use App\Repository\SubscriptionPlanRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;

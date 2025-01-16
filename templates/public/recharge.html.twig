@@ -1,7 +1,31 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}- Home -{% endblock %}
-
+{% block stylesheets %}
+<style>
+    #cardsDropdown {
+        border: 1px solid #ccc;
+        max-height: 200px;
+        overflow-y: auto;
+        width: 100%;
+    }
+    
+    #cardsDropdown .dropdown-item {
+        padding: 10px;
+        cursor: pointer;
+    }
+    
+    #cardsDropdown .dropdown-item:hover {
+        background-color: #f0f0f0;
+    }
+    
+    #cardsDropdown hr {
+        margin: 0;
+        border: 0;
+        border-top: 1px solid #ccc;
+    }
+</style>
+{% endblock %}
 {% block body %}
 
 <div>
@@ -58,27 +82,35 @@
                                         <div class="p-4" style="display: flex; flex-direction: column; text-align: center; align-items: center; justify-content: center">
                                             <img src="{{ asset('images/loading.gif') }}" alt="loading" width="50">
                                             <h5 class="mt-4"> Paiememnt en cours, Veuillez continuer avec votre telephone</h5>
-                                            <p style="max-width: 500px; margin: auto">Une fois le processus de paiement termine sur votre telephone, veuillez cliquer sur le bouton terminer.</p>
-                                            <button type="submit" class="btn mt-4" style="color: white">Terminer</button>
+                                            <p style="max-width: 500px; margin: auto">Une fois le processus de paiement termine sur votre telephone</p>
+{#                                            <button type="submit" class="btn mt-4" style="color: white">Terminer</button>#}
                                         </div>
                                     </form>
                                 {% else %}
                                 {% if step == 1 %}
                                     <form method="post">
                                         <div class="col-md-6 p-0">
-                                            <input class="form-control" type="text" name="card" id="card" value="" placeholder="Code ou Nom  ou ID  de la carte" required>
-                                        </div>
+                                            <input  class="form-control" type="text" name="card" id="card" value="" placeholder="Nom ou UID ou Code de la Carte" required>
+                                            <div 
+        id="cardsDropdown" 
+        class="dropdown-menu" 
+        style="display: none;">
+        <!-- Dynamically populated options -->
+    </div>
+                                            </div>
                                         <p class="mt-2">Quel type de recharge voulez-vous faire ?</p>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="type" id="type_fixe" value="FIXE" checked>
-                                            <label class="form-check-label" for="type_fixe">
-                                                <i class="fa-solid fa-bus-simple"></i><span class="ml-2">Recharge fixe</span>
-                                            </label>
-                                        </div>
+                                        
+
                                         <div class="form-check mt-3">
-                                            <input class="form-check-input" type="radio" name="type" id="type_subs" value="SUBSCRIPTION">
+                                            <input class="form-check-input" type="radio" name="type" id="type_subs" value="SUBSCRIPTION" checked>
                                             <label class="form-check-label" for="type_subs">
                                                 <i class="fa-solid fa-link"></i><span class="ml-2">Abonnement</span>
+                                            </label>
+                                        </div>
+					<div class="form-check">
+                                            <input class="form-check-input" type="radio" name="type" id="type_fixe" value="FIXE" disabled>
+                                            <label class="form-check-label" for="type_fixe">
+                                                <i class="fa-solid fa-bus-simple"></i><span class="ml-2">Recharge fixe</span>
                                             </label>
                                         </div>
                                         <button type="submit" class="btn mt-4" style="color: white">Suivant</button>
@@ -89,8 +121,9 @@
                                         <div class="col-md-6">
                                             <div style="border-radius: 10px; border: 1px solid #eee; padding: 20px" class="mb-4">
                                                 <p class="mb-0" style="display: flex; justify-content: space-between"><span>Noms</span><b class="text-primary">{{ card.cardHolder }}</b></p>
-                                                <p class="mb-0" style="display: flex; justify-content: space-between"><span>Num. carte</span><b class="text-primary">#{{ card.uid }}</b></p>
-                                                <p class="mb-0" style="display: flex; justify-content: space-between"><span>Code</span><b class="text-primary">#{{ card.code }}</b></p>
+                                                <p class="mb-0" style="display: flex; justify-content: space-between"><span>Num. carte</span><b class="text-primary">#{{ card is not null ? card.uid : '' }}</b></p>
+<p class="mb-0" style="display: flex; justify-content: space-between"><span>Code</span><b class="text-primary">#{{ card is not null ? card.code : '' }}</b></p>
+
                                                 <p style="display: flex; justify-content: space-between" class="mb-0 "><span>Type</span> <b>{{ type }}</b></p>
                                             </div>
                                             {% if subs is not null %}
@@ -135,13 +168,13 @@
                                                 </div>
                                                 <input type="text" class="form-control" name="phoneNumber" id="phoneNumber" aria-label="Numero mobile money">
                                             </div>
-                                            <p>
+                                            <!--<p>
                                                 <i class="fa-regular fa-credit-card"></i>
                                                 <a href="https://cardpayment.flexpay.cd/v1.1/pay" target="_blank">
                                                     <span class="mr-2 ml-2">Payer avec une carte de credit</span>
                                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                                 </a>
-                                            </p>
+                                            </p>-->
                                             <button type="submit" class="btn mt-4" style="color: white">Confirmer</button>
                                         </div>
                                         </form>
@@ -156,4 +189,81 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function checkPaymentStatus(paymentId, type, amount, subscriptionId, cardUid) {
+            fetch(`/check-payment-status?paymentId=${paymentId}&amount=${amount}&type=${type}&subscriptionId=${subscriptionId}&cardUid=${cardUid}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    if (data.waiting) {
+                        setTimeout(() => checkPaymentStatus(paymentId, type, amount, subscriptionId, cardUid), 2000);
+                    } else {
+                        console.log(data.message);
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        const paymentId = '{{ paymentId }}';
+        if (paymentId) {
+            const type = '{{ type }}';
+            const amount = '{{ amount }}';
+            const subscriptionId = '{{ subscriptionId }}';
+            const cardUid = '{{ cardUid }}';
+            checkPaymentStatus(paymentId, type, amount, subscriptionId, cardUid);
+        }
+    });
+    const inputField = document.getElementById('card');
+    const dropdown = document.getElementById('cardsDropdown');
+    
+    inputField.addEventListener('input', function () {
+        const query = this.value;
+    
+        if (query.length > 2) { // Start fetching after 2 characters
+            fetch(`/search-cards?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    dropdown.innerHTML = ''; // Clear existing options
+    
+                    if (data.length > 0) {
+                        dropdown.style.display = 'block'; // Show dropdown
+                        data.forEach((item, index) => {
+                            const option = document.createElement('div');
+                            option.classList.add('dropdown-item');
+                            option.textContent = `${item.cardHolder} (UID: ${item.uid})`;
+                            dropdown.appendChild(option);
+    
+                            // Add a line separator between options (except the last option)
+                            if (index < data.length - 1) {
+                                const separator = document.createElement('hr');
+                                dropdown.appendChild(separator);
+                            }
+                            option.addEventListener('click', function () {
+                                inputField.value = `${item.cardHolder}`;
+                                dropdown.style.display = 'none'; // Hide dropdown after selection
+                            });
+                        });
+                    } else {
+                        dropdown.style.display = 'none'; // Hide dropdown if no results
+                    }
+                })
+                .catch(error => console.error('Error fetching suggestions:', error));
+        } else {
+            dropdown.style.display = 'none'; // Hide dropdown if input length < 3
+        }
+    });
+    document.addEventListener('click', function (event) {
+    if (!dropdown.contains(event.target) && event.target !== inputField) {
+        dropdown.style.display = 'none';
+    }
+});
+</script>
 {% endblock %}

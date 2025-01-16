@@ -36,25 +36,25 @@ class AppFixtures extends Fixture
         $manager->persist($usdCurrency);
 
         /* ENTERPRISES */
-        /*for ($i = 0; $i < 5; $i ++) {
+        for ($i = 0; $i < 5; $i ++) {
             $enterprise = (new Enterprise())
                 ->setName($faker->company())
                 ->setAddress($faker->address())
                 ->setCreatedAt(new \DateTime())
             ;
             $manager->persist($enterprise);
-        }*/
+        }
 
         /* REGIONS */
-        /*$region = (new Region())
+        $region = (new Region())
             ->setName('Kinshasa')
             ->setShape('Kinshasa')
             ->setCreatedAt(new \DateTime())
         ;
-        $manager->persist($region);*/
+        $manager->persist($region);
 
         /* LINES */
-        /*$line = (new Line())
+        $line = (new Line())
             ->setName('Lemba - Gombe')
             ->setDescription('De super lemba a la gare centrale')
             ->setPaymentType('DEDUCTED')
@@ -63,10 +63,10 @@ class AppFixtures extends Fixture
             ->setCreatedAt(new \DateTime())
             ->setRegion($region)
         ;
-        $manager->persist($line);*/
+        $manager->persist($line);
 
         /* NFC CARDS */
-        /*for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $card = (new NfcCard())
                 ->setUid(uniqid())
                 ->setCardHolder($faker->name)
@@ -74,15 +74,15 @@ class AppFixtures extends Fixture
                 ->setBalance(0)
                 ->setCreatedAt(new \DateTime())
                 ->setIsActive(true)
-                ->setCode(uniqid())
+                ->setCode(substr(uniqid(), -6))
                 ->addLiness($line)
             ;
             $line->addNfcCards($card);
             $manager->persist($card);
-            $manager->persist($line);*/
-        //}
+            $manager->persist($line);
+        }
 
-        /*$subs = ['Etudiant', 'Travailleur'];
+        $subs = ['Etudiant', 'Travailleur'];
         for ($i = 0; $i < 2; $i++) {
             $subscriptionPlan = (new SubscriptionPlan())
                 ->setTitle($subs[$i])
@@ -93,9 +93,9 @@ class AppFixtures extends Fixture
                 ->setCreatedAt(new \DateTime())
             ;
             $manager->persist($subscriptionPlan);
-        }*/
+        }
 
-      /*  $pos = [
+        $pos = [
             'V1' => [
                 'lat' => -4.3390034241561,
                 'lng' => 15.285175112679,
@@ -118,7 +118,7 @@ class AppFixtures extends Fixture
                 ->setCurrentLng($p['lng'])
             ;
             $manager->persist($vehicle);
-        }*/
+        }
 
         $manager->flush();
     }

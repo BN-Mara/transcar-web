@@ -30,6 +30,24 @@ class NfcCardRepository extends ServiceEntityRepository
         }
     }
 
+    public function findOneByCodeOrCardHolderOrUid($value)
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.code = :value OR c.cardHolder = :value OR c.uid = :value')
+            ->setParameter('value', $value)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+    public function findByLikeValue($value){
+        return $this->createQueryBuilder('e')
+            ->where('e.code LIKE :value OR e.cardHolder LIKE :value OR e.uid LIKE :value')
+            ->setParameter('value', '%' . $value . '%')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+
+    }
+
     public function remove(NfcCard $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
@@ -37,14 +55,6 @@ class NfcCardRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
-    }
-    public function findOneByCodeOrCardHolderOrUid($value)
-    {
-    return $this->createQueryBuilder('c')
-        ->where('c.code = :value OR c.cardHolder = :value OR c.uid = :value')
-        ->setParameter('value', $value)
-        ->getQuery()
-        ->getOneOrNullResult();
     }
 
 //    /**

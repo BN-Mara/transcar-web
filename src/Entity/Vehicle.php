@@ -82,7 +82,7 @@ class Vehicle
     #[ORM\OneToMany(mappedBy: 'vehicle', targetEntity: VehicleTracker::class)]
     private Collection $vehicleTrackers;
 
-    #[ORM\ManyToOne(inversedBy: 'vehicles')]
+    #[ORM\ManyToOne(fetch: 'EAGER',inversedBy: 'vehicles')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['vehicle:read'])]
     private ?Line $line = null;

@@ -122,7 +122,9 @@ services:
             - ~
             - App\Entity\SubscriptionPlan
             - ~
-    
+    App\Service\Admin\DecoratingDataSource:
+        decorates: 'sonata.admin.data_source.orm'
+        arguments: ['@App\Service\Admin\DecoratingDataSource.inner']
     #admin.notification:
         #class: App\Admin\NotificationAdmin
         #tags:

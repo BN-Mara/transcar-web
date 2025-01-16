@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Sonata\AdminBundle\Admin\AbstractAdmin;
 use Sonata\AdminBundle\Datagrid\DatagridMapper;
 use Sonata\AdminBundle\Datagrid\ListMapper;
+use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Form\FormMapper;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -25,7 +26,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Security\Csrf\TokenStorage\TokenStorageInterface;
 
 final class RechargeCarteAdmin extends AbstractAdmin{
-
+    protected $mCardUid;
+    protected $mCardHolder;
     public function __construct(private NotificationService $notifyer, private EntityManagerInterface $em)
     {
         
@@ -59,6 +61,7 @@ final class RechargeCarteAdmin extends AbstractAdmin{
         
         
         $list->add('card.uid');
+	$list->add('card.cardHolder');
         $list->add('amount');
         $list->add('createdAt');
         $list->add('rechargeType');
@@ -74,7 +77,10 @@ final class RechargeCarteAdmin extends AbstractAdmin{
     protected function configureShowFields(ShowMapper $show): void
     {
 
-        $show->add('card.uid');
+        $show->add('card.uid', null, [
+    'label' => 'Card UID'
+]);
+	$show->add('card.cardHolder');
         $show->add('amount');
         $show->add('createdAt');
         $show->add('createdBy');
@@ -106,15 +112,18 @@ final class RechargeCarteAdmin extends AbstractAdmin{
     }
     protected function configureExportFields(): array
     {
-        return ['card.uid','card.cardHolder', 'amount', 'createdAt', 'createdBy'=> function($object):string{
-            return $this->getChargerPhone($object->getReference());
-        },'fromDate','toDate','reference'];
+        return ['card.uid','card.cardHolder', 'amount', 'createdAt', 'createdBy','fromDate','toDate','reference'];
     }
-    private function getChargerPhone($ref): string
+    protected function createQueryBuilder($context)
     {
-        $payment = $this->em->getRepository(Payment::class)->findOneBy(["ref"=>$ref]);
-        return $payment->getPhoneNumber();
+        // Get the default query builder from the parent class
+        $qb = parent::createQueryBuilder($context);
 
+        // Add a LEFT JOIN to include 'card' entity in the query
+        $qb->leftJoin($qb->getRootAlias() . '.card', 'card')
+            ->addSelect('card');
+
+        return $qb;
     }
 
 }

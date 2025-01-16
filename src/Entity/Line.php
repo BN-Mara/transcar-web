@@ -28,7 +28,7 @@ class Line
     #[ORM\Column(length: 15)]
     private ?string $paymentType = null;
 
-    #[ORM\ManyToOne(inversedBy: 'liness')]
+    #[ORM\ManyToOne(fetch: 'EAGER',inversedBy: 'liness')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Region $region = null;
 
@@ -58,7 +58,7 @@ class Line
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $createdBy = null;
 
-    #[ORM\ManyToOne(inversedBy: 'liness')]
+    #[ORM\ManyToOne(fetch: 'EAGER',inversedBy: 'liness')]
     private ?Enterprise $enterprise = null;
 
     #[ORM\ManyToOne]

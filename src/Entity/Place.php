@@ -28,7 +28,7 @@ class Place
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $createdAt = null;
 
-    #[ORM\ManyToOne(inversedBy: 'places')]
+    #[ORM\ManyToOne(fetch: 'EAGER',inversedBy: 'places')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Line $line = null;
 

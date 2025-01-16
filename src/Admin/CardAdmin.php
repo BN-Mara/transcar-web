@@ -109,8 +109,9 @@ final class CardAdmin extends AbstractAdmin{
     }
     public function prePersist(object $card): void
     {
-        $generator = new StringGenerator();
-        $code = $generator->generate(6);
+        //$generator = new StringGenerator();
+        
+        $code = strtoupper( substr($card->getUid(), 0, 6));
         $card->setBalance(0);
         $card->setCode($code);
     }

@@ -16,9 +16,15 @@ use App\Service\TransactionService;
 use Doctrine\DBAL\Driver\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class PublicController extends AbstractController
 {
@@ -61,14 +67,7 @@ class PublicController extends AbstractController
 
     #[Route('/bus/mapview/{code}/{type}', name:'buses_map')]
     public function mapView($code, $type): Response{
-        //$card = $this->em->getRepository(NfcCard::class)->findOneBy(['code'=> $code]);
-        $card = $this->em->createQueryBuilder()
-    ->select('c')
-    ->from(NfcCard::class, 'c')
-    ->where('c.code = :value OR c.cardHolder = :value OR c.uid = :value')
-    ->setParameter('value', $code)
-    ->getQuery()
-    ->getOneOrNullResult();
+        $card = $this->em->getRepository(NfcCard::class)->findOneBy(['code'=> $code]);
         if (!$card) {
             $this->addFlash('error',"Code fourni ($code)  ne correspond en aucune carte.");
             return $this->redirectToRoute('app_public');
@@ -108,10 +107,10 @@ class PublicController extends AbstractController
         }
 
         $card = null;
-        $code = $request->getSession()->get('recharge_card') ?? null;
+        $codeData = $request->getSession()->get('recharge_card') ?? null;
 
-        if ($code != null) {
-            $card = $this->cardRepository->findOneByCodeOrCardHolderOrUid(['code' => $code]);
+        if ($codeData != null) {
+            $card = $this->cardRepository->findOneByCodeOrCardHolderOrUid($codeData);
         }
 
         if ($request->getMethod() === Request::METHOD_POST) {
@@ -119,43 +118,7 @@ class PublicController extends AbstractController
 
             if (isset($cancel)) {
                 $this->killRechargeProcess($request);
-                return $this->redirectToRoute('app_public');
-            }
-
-            $finish = $request->request->get("finish");
-            if (isset($finish)) {
-                /**
-                 * @var Payment $payment
-                 */
-                $payment = $this->paymentRepository->find($paymentId);
-                $request->getSession()->remove('recharge_paying');
-                if (isset($payment)) {
-                    try {
-                        $paymentStatusData = $this->paymentService->checkPaymentStatus($payment);
-                        if (!$paymentStatusData['success']) {
-                            $this->addFlash('error', 'Le paiement a echoue, Veuillez ressayer');
-                        } else {
-                            $subsResponse = $this->transactionService->recharge(
-                                $type,
-                                $subscriptionId,
-                                $amount,
-                                $card->getUid()
-                            );
-
-                            $payment
-                                ->setPaid(true)
-                                ->setRef($subsResponse['ref']);
-                            $this->paymentRepository->save($payment);
-
-                            $this->addFlash($subsResponse['status'] ? 'success' : 'error', $subsResponse['message']);
-                            $this->killRechargeProcess($request);
-                        }
-                    } catch (Exception $e) {
-                        $this->addFlash('error : ', $e->getMessage());
-                        $request->getSession()->remove('recharge_payment_id');
-                    }
-                }
-                return $this->redirect($request->headers->get('referer'));
+                return $this->redirectToRoute('app_recharge');
             }
 
             if ($step == 1) {
@@ -180,11 +143,14 @@ class PublicController extends AbstractController
         return $this->render('public/recharge.html.twig', [
             'step'      => $step,
             'type'      => $type,
+            'cardUid'      => $card == null ? null : $card->getUid(),
             'subs'      => $subs,
             'paying'    => $paying,
             'card'      => $card,
             'paymentId' => $paymentId,
             'currency'  => $currency,
+            'subscriptionId' => $subscriptionId,
+            'amount' => $amount
         ]);
     }
 
@@ -199,6 +165,71 @@ class PublicController extends AbstractController
         }
         $vehicles = $card->getLiness()[0]->getVehicles();
         return $this->json($vehicles, 200);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+
+    #[Route('/check-payment-status', name:'check_payment_status')]
+    public function checkPaymentStatus(Request $request): JsonResponse {
+        $paymentId = $request->query->get('paymentId');
+        $type = $request->query->get('type');
+        $cardUid = $request->query->get('cardUid');
+        $subscriptionId = $request->query->get('subscriptionId');
+        $amount = $request->query->get('amount');
+
+        $payment = $this->paymentRepository->find($paymentId);
+        if (!$payment) {
+            return $this->json(['success' => false, 'message' => 'Payment not found', 'waiting' => false]);
+        }
+
+        $paymentStatusData = $this->paymentService->checkPaymentStatus($payment);
+        $success = false;
+        $waiting = false;
+
+        if ($paymentStatusData['success']) {
+            $payment->setPaid(true);
+            $this->paymentRepository->save($payment);
+
+            $subsResponse = $this->transactionService->recharge($type, $subscriptionId, $amount, $cardUid, $payment->getRef(), $payment->getPhoneNumber());
+            if ($subsResponse['status']) {
+                $payment->setRef($subsResponse['ref']);
+                $this->paymentRepository->save($payment);
+                $message = 'Payment successful';
+                $success = true;
+            } else {
+                $message = $subsResponse['message'];
+            }
+        } elseif ($paymentStatusData['waiting']) {
+            $message = 'Payment still processing';
+            $waiting = true;
+        } else {
+            $message = 'Payment failed';
+        }
+
+        if (!$waiting) {
+            $this->killRechargeProcess($request);
+            $this->addFlash($success ? 'success' : 'error', $message);
+        }
+
+        return $this->json(['success' => $success, 'message' => $message, 'waiting' => $waiting]);
+    }
+
+    #[Route('/search-cards', name:'search_cards_match')]
+    public function searchCard(Request $request): JsonResponse{
+        $query = $request->query->get('query', '');
+        $results = $this->em->getRepository(NfcCard::class)->findByLikeValue($query);
+
+        $suggestions = array_map(function ($result) {
+            return ['code' => $result->getCode(), 'cardHolder' => $result->getCardHolder(), 'uid'=>$result->getUid()];
+        }, $results);
+        return new JsonResponse($suggestions);
+
     }
 
     private function killRechargeProcess (Request $request) : void {
