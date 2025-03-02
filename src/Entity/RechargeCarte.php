@@ -25,7 +25,7 @@ class RechargeCarte
     #[ORM\Column(length: 64)]
     private ?string $createdBy = null;
 
-    #[ORM\ManyToOne(fetch: 'EAGER',inversedBy: 'rechargeCartes')]
+    #[ORM\ManyToOne(targetEntity:"App\Entity\NfcCard",fetch: 'EAGER',inversedBy: 'rechargeCartes')]
     private ?NfcCard $card = null;
 
     #[ORM\Column(nullable: true)]

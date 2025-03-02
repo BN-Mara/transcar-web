@@ -57,6 +57,7 @@ class TransactionService extends AbstractController
         if ($type === "SUBSCRIPTION") {
             $durationInDays = $subs->getDuration();
             $now = (clone $date)->add(new \DateInterval("P{$durationInDays}D"));
+            $card->setSubscriptionFromDate($date);
             $card->setSubscriptionEndDate($now);
             $trans->setFromDate($date)->setToDate($now);
             $trans->setSubscriptionId($subsId)->setRechargeType($type);

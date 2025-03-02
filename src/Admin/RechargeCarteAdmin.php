@@ -105,7 +105,7 @@ final class RechargeCarteAdmin extends AbstractAdmin{
     public function preUpdate(object $recharge): void
     {
         //$ticket->setUpdatedAt(new \DateTime('now',new \DateTimeZone('Africa/Kinshasa')));
-        return ;
+        
 
 
       
@@ -116,6 +116,7 @@ final class RechargeCarteAdmin extends AbstractAdmin{
     }
     protected function createQueryBuilder($context)
     {
+        die();
         // Get the default query builder from the parent class
         $qb = parent::createQueryBuilder($context);
 
@@ -125,5 +126,23 @@ final class RechargeCarteAdmin extends AbstractAdmin{
 
         return $qb;
     }
+    protected function configureQuery(ProxyQueryInterface $query): ProxyQueryInterface
+    {
+        // Get the query builder from the ProxyQueryInterface
+    $qb = $query->getQueryBuilder();
+
+    // Use the confirmed root alias
+    $rootAliases = $qb->getRootAliases();
+    $rootAlias = $rootAliases[0]; // No need to check, as we know it's "o"
+
+    // Add a LEFT JOIN to include 'card' entity in the query
+    $qb->leftJoin("$rootAlias.card", 'card')
+        ->addSelect('card');
+
+        //die($qb->getQuery()->getSQL());
+
+    return $query;
+    }
+
 
 }

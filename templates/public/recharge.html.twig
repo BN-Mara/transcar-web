@@ -139,7 +139,7 @@
                                                                 <b class="ml-2">{{ sub.title }}</b>
                                                             </label>
                                                             <p class="mb-1"><i class="fa-solid fa-bars"></i><span class="ml-2">{{ sub.description }}</span></p>
-                                                            <p class="mb-2">{{ sub.duration }} Jours</p>
+                                                            <!--<p class="mb-2">{{ sub.duration }} Jours</p>-->
                                                             <p class="text-primary mb-2"><b>{{ sub.amount }} {{ sub.currency != null ? sub.currency.code : currency.code }}</b></p>
                                                         </div>
                                                         {% endfor %}
@@ -166,15 +166,14 @@
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text">+243</span>
                                                 </div>
-                                                <input type="text" class="form-control" name="phoneNumber" id="phoneNumber" aria-label="Numero mobile money">
-                                            </div>
-                                            <!--<p>
-                                                <i class="fa-regular fa-credit-card"></i>
+                                                <input type="text" class="form-control" name="phoneNumber" id="phoneNumber" onkeypress="return /[0-9]/i.test(event.key)" aria-label="Numero mobile money" maxlength="9" >
+                                            </div> 
+                                                <!--<i class="fa-regular fa-credit-card"></i>
                                                 <a href="https://cardpayment.flexpay.cd/v1.1/pay" target="_blank">
                                                     <span class="mr-2 ml-2">Payer avec une carte de credit</span>
                                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                                </a>
-                                            </p>-->
+                                                </a>-->
+                                            </p>
                                             <button type="submit" class="btn mt-4" style="color: white">Confirmer</button>
                                         </div>
                                         </form>

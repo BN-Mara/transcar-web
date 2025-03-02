@@ -19,9 +19,15 @@ class DecoratingDataSource implements DataSourceInterface
     public function createIterator(ProxyQueryInterface $query, array $fields): DoctrineORMQuerySourceIterator
     {
         /** @var DoctrineORMQuerySourceIterator $iterator */
-        $iterator = $this->dataSource->createIterator($query, $fields);
+        //$iterator = $this->dataSource->createIterator($query, $fields);
+        $iterator = new DoctrineORMQuerySourceIterator($query->getQueryBuilder()->getQuery(), $fields);
 
-        $iterator->setDateTimeFormat('Y-m-d H:i:s');
+        // Inspect the data being exported
+        /*foreach ($iterator as $row) {
+            dump($row); // Check if 'card.uid' is present and populated
+        }*/
+
+        $iterator->setDateTimeFormat('d/m/Y H:i:s');
 
         return $iterator;
     }
